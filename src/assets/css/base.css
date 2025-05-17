@@ -1,0 +1,35 @@
+:root {
+  --youthol-blue: #008aff;
+  --youthol-orange: #f68512;
+  --youthol-red: #ff3535;
+  --youthol-black: #000000;
+  --youthol-white: #ffffff;
+  --youthol-gray: #a6a6a6;
+  --youthol-green: #58c858;
+
+  --youthol-gray-light: #cfcfcf;
+}
+
+@font-face {
+  font-family: 'SmileySans';
+  src: url('@/assets/font/SmileySans.ttf.woff2');
+}
+
+.main-layout {
+  height: 100%;
+}
+
+#app {
+  height: 100vh;
+}
+body {
+  min-height: 100vh;
+  height: 100vh;
+  transition:
+    color 0.5s,
+    background-color 0.5s;
+  font-size: 16px;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

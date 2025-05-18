@@ -1,10 +1,11 @@
 <script setup>
 import { http } from '@/utils/http'
-import { nextTick, reactive, ref, watch } from 'vue'
+import { nextTick, onMounted, reactive, ref, watch } from 'vue'
 
 const isRelayed = ref(false)
 const visitorNum = ref(0)
 const showEffect = ref(false)
+const myRelayNum = ref(0)
 
 // 成功后 触发粒子特效 3s
 watch(isRelayed, (val) => {
@@ -16,16 +17,34 @@ watch(isRelayed, (val) => {
   }
 })
 
+// 真正执行「接力」请求
+async function doRelay() {
+  try {
+    const res = await http.post('/relay/')
+    const num = res.data.visitorNum
+    // 标记已经接力，并把当前编号存储
+    localStorage.setItem('hasRelayed', '1')
+    localStorage.setItem('myRelayNum', num)
+    isRelayed.value = true
+    visitorNum.value = num
+    myRelayNum.value = num
+  } catch {
+    alert('接力失败，请稍后再试')
+  }
+}
+
 function postRelay() {
-  isRelayed.value = true
-  return
-  http
-    .post('/relay')
-    .then((res) => {
-      isRelayed.value = true
-      visitorNum.value = res.data.visitorNum
-    })
-    .catch(console.error)
+  if (!isRelayed.value) doRelay()
+}
+
+// 仅取当前接力人数（不新增）
+async function fetchVisitorNum() {
+  try {
+    const res = await http.get('/relay/count/')
+    visitorNum.value = res.data.visitorNum
+  } catch {
+    alert('获取接力人数失败，请稍后再试')
+  }
 }
 
 // confetti 粒子配置（红金主基调）
@@ -97,6 +116,20 @@ function onClickSlide(e) {
     }, 1000)
   })
 }
+
+onMounted(async () => {
+  // 第一次进来，检查 localStorage
+  if (localStorage.getItem('hasRelayed') === '1') {
+    isRelayed.value = true
+    // 从存的值里读 myRelayNum
+    myRelayNum.value = parseInt(localStorage.getItem('myRelayNum'), 10) || 0
+    // 并同步最新总数（保持显示准确）
+    await fetchVisitorNum()
+  } else {
+    // 如果没接力，仍然加载当前总数展示
+    await fetchVisitorNum()
+  }
+})
 </script>
 <template>
   <div class="slide-item" @click="onClickSlide">
@@ -121,8 +154,11 @@ function onClickSlide(e) {
       </button>
 
       <!-- 成功后：显示独立的数字文案 -->
-      <div v-else class="visitor-info animate__animated animate__pulse animate__infinite">
-        你是第 <span class="visitor-num">{{ visitorNum }}</span> 位接力者
+      <div v-else class="visitor-info">
+        <div class="visitor-total">已有 {{ visitorNum }} 位接力者为母校接力</div>
+        <div class="visitor-myself animate__animated animate__pulse animate__infinite">
+          你是第 <span class="visitor-num">{{ myRelayNum }}</span> 位接力者
+        </div>
       </div>
     </div>
   </div>
@@ -221,6 +257,12 @@ function onClickSlide(e) {
   font-size: 1.25rem;
   color: #ffeab4; /* 浅金色文字 */
   text-align: center;
+}
+
+.visitor-total {
+  margin: 10px 0 0 0;
+  font-size: 1rem;
+  color: #ffeab4; /* 浅金色文字 */
 }
 
 /* 数字高亮 */

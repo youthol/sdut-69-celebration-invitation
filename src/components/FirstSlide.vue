@@ -5,27 +5,6 @@ import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 const fireworks = ref(null)
 const fireworksCanvas = ref(null)
 
-// watch(props.currentSlide, async (idx) => {
-//   if (idx === 0) {
-//     await nextTick() // 等 Vue 渲染出 <canvas>
-//     // 如果旧实例还在，先彻底销毁
-//     if (fireworks.value) {
-//       fireworks.value.stop()
-//       fireworks.value.clear() // 清掉所有残余
-//       fireworks.value = null
-//     }
-//     // 再 new 一个新的
-//     fireworks.value = new Fireworks(fireworksCanvas.value, {
-//       /* ...options */
-//     })
-//     fireworks.value.start()
-//   } else {
-//     // 离开第 0 页时也可以 stop+clear
-//     fireworks.value?.stop()
-//     fireworks.value?.clear()
-//   }
-// })
-
 onMounted(async () => {
   await nextTick() // 等 Vue 渲染出 <canvas>
   // 如果旧实例还在，先彻底销毁
@@ -57,6 +36,10 @@ onBeforeUnmount(() => {
       <div class="invite-text">山东理工大工学</div>
       <div class="invite-text">69 周年校庆诚邀您的到来</div>
     </div>
+  </div>
+  <div class="move-tips">
+    <div class="move-tips-arrows animate__animated animate__heartBeat animate__infinite">↑</div>
+    <div class="move-tips-text">向上滑动查看更多</div>
   </div>
 </template>
 
@@ -153,5 +136,41 @@ onBeforeUnmount(() => {
 .slide-item > *:not(.fireworks-canvas) {
   position: relative;
   z-index: 1; /* 文字内容盖在上面 */
+}
+
+.move-tips {
+  position: fixed;
+  bottom: 12vh;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.move-tips-arrows,
+.move-tips-text {
+  /* 渐变文字保持不变 */
+  background: linear-gradient(180deg, #ffd66b, #f0a430);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow:
+    0 0 4px rgba(255, 214, 107, 0.6),
+    0 0 8px rgba(255, 214, 107, 0.4);
+  /* 共同的发光动画 */
+}
+
+/* 箭头更大号 */
+.move-tips-arrows {
+  font-size: 3rem;
+  font-weight: 900;
+}
+
+/* 文字说明稍小 */
+.move-tips-text {
+  font-size: 1.2rem;
+  font-weight: 900;
+  margin-top: 10px;
 }
 </style>

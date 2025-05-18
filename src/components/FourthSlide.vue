@@ -1,77 +1,22 @@
 <script setup>
 import { http } from '@/utils/http'
-import { testData4 } from '@/utils/testData'
 import Danmaku from 'danmaku'
-import { onMounted, ref, watch } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 
 const blessList = ref([])
 const danmakuRef = ref(null)
 let danmaku = null
 const showModal = ref(false)
 const wishText = ref('')
+let cycleTimer = null
 
 // 拉取祝福列表
 async function fetchBlessList() {
   //生成十句美好的祝福
-  blessList.value = testData4
-  return
-  const res = await http.get('/bless/list')
+  const res = await http.get('/bless/list/')
   blessList.value = res.data
+  console.log(res)
 }
-
-// 初始化弹幕
-onMounted(async () => {
-  danmaku = new Danmaku({
-    container: danmakuRef.value,
-    engine: 'dom',
-    width: danmakuRef.value.clientWidth,
-    height: danmakuRef.value.clientHeight,
-    defaultDuration: 8000,
-    mode: 'right',
-    comments: [],
-  })
-
-  await fetchBlessList()
-})
-
-// 当祝福列表更新时，错位＋分散发射
-watch(blessList, (list) => {
-  if (!danmaku) return
-
-  const colors = ['#FFD66B', '#F0A430', '#D63E0F', '#ffffff', '#ffeab4']
-  list.forEach((text, i) => {
-    // 随机延时：0.5s～4s 之间
-    const delay = 500 + Math.random() * 3500
-
-    setTimeout(
-      () => {
-        // 随机字号
-        const fontSize = 16 + Math.random() * 12 // 16px～28px
-        // 随机颜色
-        const color = colors[Math.floor(Math.random() * colors.length)]
-        // 随机纵向位置（20%～80% 区间）
-        const y = 20 + Math.random() * 60
-
-        danmaku.emit({
-          mode: 1,
-          text,
-          style: {
-            fontSize: `${fontSize}px`,
-            color,
-            textShadow: '1px 1px 2px rgba(0,0,0,0.6)',
-            padding: '6px 12px',
-            borderRadius: '400px',
-            background: 'rgba(0,0,0,0.2)',
-            margin: '10px 0px',
-          },
-          // 这里直接指定 y（百分比）
-          y,
-        })
-      },
-      i * 200 + delay,
-    )
-  })
-})
 
 function openModal() {
   showModal.value = true
@@ -84,10 +29,79 @@ function closeModal() {
 
 function onSend() {
   if (!wishText.value.trim()) return
-  // TODO: 调用后端接口发送祝福，例如：
-  // await http.post('/bless/send', { text: wishText.value })
-  closeModal()
+  http
+    .post('/bless/send/', { content: wishText.value })
+    .then((res) => {
+      // 发送成功后，祝福列表后追加新的内容
+      blessList.value.push(res.data.content)
+      alert('发送成功！')
+      closeModal()
+    })
+    .catch((err) => {
+      console.error(err)
+      alert('发送失败，请稍后再试')
+    })
 }
+
+// 播放一轮弹幕，并在最后安排下一轮
+function playCycle() {
+  if (!danmaku || blessList.value.length === 0) return
+
+  const colors = ['#FFD66B', '#F0A430', '#D63E0F', '#ffffff', '#ffeab4']
+  const baseInterval = 200 // 每条间隔基础
+  const maxRand = 3500 // 随机延迟上限
+  const durations = []
+
+  blessList.value.forEach((text, i) => {
+    const delay = i * baseInterval + (500 + Math.random() * maxRand)
+    durations.push(delay)
+    setTimeout(() => {
+      const fontSize = 16 + Math.random() * 12
+      const color = colors[Math.floor(Math.random() * colors.length)]
+      const y = 20 + Math.random() * 60
+
+      danmaku.emit({
+        mode: 1,
+        text,
+        style: {
+          fontSize: `${fontSize}px`,
+          color,
+          textShadow: '1px 1px 2px rgba(0,0,0,0.6)',
+          padding: '6px 12px',
+          borderRadius: '400px',
+          background: 'rgba(0,0,0,0.2)',
+        },
+        y,
+      })
+    }, delay)
+  })
+
+  // 计算本轮最后一条弹幕“结束”时间：最长延时 + 0ms 持续
+  const maxDelay = Math.max(...durations)
+
+  // 安排下一轮
+  cycleTimer = setTimeout(playCycle, maxDelay)
+}
+
+onMounted(async () => {
+  // 初始化 Danmaku
+  danmaku = new Danmaku({
+    container: danmakuRef.value,
+    engine: 'dom',
+    width: danmakuRef.value.clientWidth,
+    height: danmakuRef.value.clientHeight,
+    defaultDuration: 8000,
+    mode: 'right',
+    comments: [],
+  })
+
+  await fetchBlessList()
+  playCycle()
+})
+
+onBeforeUnmount(() => {
+  clearTimeout(cycleTimer)
+})
 </script>
 
 <template>

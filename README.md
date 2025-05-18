@@ -1,35 +1,12 @@
-# test_swiper
+# 校庆 69 周年邀请 H5
 
-This template should help get you started developing with Vue 3 in Vite.
+共 4 个 Slide：
+1. 欢迎页，烟花特效
+2. 正文页，蛋糕掉落
+3. 接力页，点击爆炸
+4. 留言页，弹幕滚动
 
-## Recommended IDE Setup
+使用 swiper、vue-particles、fireworks、danmaku、animate 制作。
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
 
-## Customize configuration
 
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
-npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
-npm run dev
-```
-
-### Compile and Minify for Production
-
-```sh
-npm run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```

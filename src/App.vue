@@ -33,9 +33,6 @@ onBeforeUnmount(() => {})
       :slides-per-view="1"
       :space-between="spaceBetween"
       :centered-slides="true"
-      :pagination="{
-        hideOnClick: true,
-      }"
       :breakpoints="{
         768: {
           slidesPerView: 1,
